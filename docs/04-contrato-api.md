@@ -2,22 +2,53 @@
 
 Base: `/api/v1`. JSON. Fechas ISO-8601 sin zona (`2026-11-20T18:00:00`), siempre `Europe/Madrid`. Importes como string decimal (`"12.50"`) para no perder precisión.
 
-Cabecera de identidad (fase 1): `X-User-Id: <id>` en todos los endpoints de reservas. Si falta o no es numérica → 400. Si el usuario no existe → 404.
+Cabecera de identidad (fase 1, hasta que haya login): `X-User-Id: <uuid>` en los endpoints de reservas y en los de admin. Si falta o no es un UUID válido → 400. Si el usuario no existe → 404. Si el endpoint es de admin y el usuario no lo es → 403 `ADMIN_REQUIRED`.
+
+Endpoints de admin: `POST /clubs`, `POST /clubs/{id}/courts`, `POST /courts/{id}/deactivate`, `POST /admin/invitations`.
 
 ## Usuarios
 
 ### `POST /users` → 201
+Público (sin cabecera).
 ```json
-{ "name": "Alex", "email": "alex@example.com", "role": "PLAYER" }
+{ "firstName": "Alex", "lastName": "Izquierdo", "email": "alex@example.com", "password": "unaClaveLarga" }
 ```
-Validación: `name` 1–100, `email` válido, `role` obligatorio.
+Validación: nombres de 1 a 100 caracteres, `email` válido, `password` de 8 a 72. **No hay campo `role`**: si llega, se ignora y el usuario es siempre `PLAYER`.
 Respuesta y `Location: /api/v1/users/{id}`:
 ```json
-{ "id": "3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b7c", "name": "Alex", "email": "alex@example.com", "role": "PLAYER" }
+{ "id": "3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b7c", "firstName": "Alex", "lastName": "Izquierdo", "email": "alex@example.com", "role": "PLAYER" }
 ```
+Nunca devuelvas `password` ni `passwordHash`, en ninguna respuesta.
 Errores: 400, 409 `EMAIL_ALREADY_REGISTERED`.
 
 ### `GET /users/{id}` → 200 | 404
+
+## Invitaciones de ADMIN
+
+### `POST /admin/invitations` → 201 (admin)
+```json
+{ "email": "nuevo.admin@example.com" }
+```
+Respuesta, **sin el token** (el token solo sale por `InvitationNotifier`, que en la fase 1 lo escribe en el log):
+```json
+{ "id": "9a1c...", "email": "nuevo.admin@example.com", "status": "PENDING", "expiresAt": "2026-11-21T12:00:00" }
+```
+Errores: 400, 403 `ADMIN_REQUIRED`, 409 `EMAIL_ALREADY_REGISTERED`.
+
+### `POST /admin/invitations/accept` → 201
+Público: el token es la credencial.
+```json
+{ "token": "q3J0...base64url", "firstName": "Ana", "lastName": "García", "password": "otraClaveLarga" }
+```
+Respuesta: el usuario creado, con `role: ADMIN`. El email sale de la invitación.
+
+| HTTP | Código | Cuándo |
+|---|---|---|
+| 404 | `INVITATION_NOT_FOUND` | token desconocido |
+| 409 | `CONCURRENT_MODIFICATION` | dos aceptaciones simultáneas |
+| 409 | `EMAIL_ALREADY_REGISTERED` | el email se registró después de invitar |
+| 422 | `INVITATION_EXPIRED` | |
+| 422 | `INVITATION_NOT_PENDING` | ya aceptada o revocada |
 
 ## Clubes
 

@@ -6,6 +6,7 @@ MySQL 8.4, InnoDB, `utf8mb4`. Esquema gestionado **solo** por Flyway (`spring.jp
 
 ```
 app_user 1 ──── * reservation * ──── 1 court * ──── 1 club 1 ──── * peak_window
+app_user 1 ──── * admin_invitation   (invited_by)
 ```
 
 ## Tablas
@@ -13,14 +14,38 @@ app_user 1 ──── * reservation * ──── 1 court * ──── 1 cl
 ### `app_user`
 (`user` es palabra reservada; no la uses.)
 
-| Columna | Tipo         | Restricciones |
-|---|--------------|---|
-| id | UUID         | PK |
-| name | VARCHAR(100) | NOT NULL |
+| Columna | Tipo | Restricciones |
+|---|---|---|
+| id | BINARY(16) | PK |
+| first_name | VARCHAR(100) | NOT NULL |
+| last_name | VARCHAR(100) | NOT NULL |
 | email | VARCHAR(255) | NOT NULL, UNIQUE (`uk_app_user_email`) |
-| role | VARCHAR(20)  | NOT NULL, CHECK in ('PLAYER','ADMIN') |
-| version | BIGINT       | NOT NULL DEFAULT 0 |
-| created_at | DATETIME(6)  | NOT NULL |
+| password_hash | VARCHAR(100) | NOT NULL (BCrypt son 60 caracteres; deja margen por si cambias de algoritmo) |
+| role | VARCHAR(20) | NOT NULL, CHECK in ('PLAYER','ADMIN') |
+| version | BIGINT | NOT NULL DEFAULT 0 |
+| created_at | DATETIME(6) | NOT NULL |
+
+**`UUID` no es un tipo de MySQL.** Has escrito `UUID` en esta tabla y la migración fallaría. Usa `BINARY(16)`: ocupa 16 bytes, frente a los 36 de `CHAR(36)`. En la entidad, mapea `java.util.UUID` y comprueba con `ddl-auto: validate` que Hibernate lo espera como `binary(16)`. Si no es así, fuérzalo con `@JdbcTypeCode(SqlTypes.BINARY)`. Para consultar a mano en MySQL: `BIN_TO_UUID(id)`.
+
+### `admin_invitation`
+
+| Columna | Tipo | Restricciones |
+|---|---|---|
+| id | BINARY(16) | PK |
+| email | VARCHAR(255) | NOT NULL |
+| token_hash | CHAR(64) | NOT NULL, UNIQUE (`uk_admin_invitation_token`) |
+| invited_by | BINARY(16) | NOT NULL, FK → app_user(id) |
+| status | VARCHAR(20) | NOT NULL, CHECK in ('PENDING','ACCEPTED','REVOKED') |
+| created_at | DATETIME(6) | NOT NULL |
+| expires_at | DATETIME(6) | NOT NULL |
+| accepted_at | DATETIME(6) | NULL |
+| version | BIGINT | NOT NULL DEFAULT 0 |
+
+Índices: `idx_admin_invitation_email_status (email, status)`.
+
+Por qué el hash y no el token: si alguien lee la BD (un backup, un log de queries), con el hash no puede aceptar la invitación. SHA-256 basta aquí (no BCrypt) porque el token es aleatorio y largo; no hay diccionario contra el que atacar.
+
+Un solo uso con dos usuarios aceptando el mismo token a la vez: lo cubre `@Version`. El segundo commit falla y devuelve `CONCURRENT_MODIFICATION`, y si reintenta recibe `INVITATION_NOT_PENDING`.
 
 ### `club`
 
@@ -65,7 +90,7 @@ Restricciones: `uk_court_club_name (club_id, name)`.
 |---|---|---|
 | id | BIGINT | PK |
 | court_id | BIGINT | NOT NULL, FK → court(id) |
-| user_id | UUID | NOT NULL, FK → app_user(id) |
+| user_id | BINARY(16) | NOT NULL, FK → app_user(id) |
 | start_at | DATETIME | NOT NULL |
 | end_at | DATETIME | NOT NULL, CHECK `end_at > start_at` |
 | price | DECIMAL(8,2) | NOT NULL |
@@ -108,8 +133,11 @@ Entiende bien el tercer caso: es el que más se pregunta en entrevistas.
 | Fichero | Contenido |
 |---|---|
 | `V1__create_app_user.sql` | `app_user` |
-| `V2__create_club_and_peak_window.sql` | `club`, `peak_window` |
-| `V3__create_court.sql` | `court` |
-| `V4__create_reservation.sql` | `reservation` + columna generada + índices |
+| `V2__create_admin_invitation.sql` | `admin_invitation` |
+| `V3__create_club_and_peak_window.sql` | `club`, `peak_window` |
+| `V4__create_court.sql` | `court` |
+| `V5__create_reservation.sql` | `reservation` + columna generada + índices |
+
+El primer ADMIN **no** va en una migración (D16).
 
 Nunca edites una migración ya aplicada: crea una nueva. Datos de prueba solo en tests, no en migraciones de producción.

@@ -73,10 +73,40 @@ La franja es punta si su **inicio** está dentro de alguna `PeakWindow` del club
 - ☐ Cancelar una reserva ajena → `RESERVATION_NOT_FOUND` (404).
 - ☐ Tras cancelar, la franja vuelve a aparecer libre en disponibilidad.
 
-## R7 – Usuarios
+## R7 – Usuarios y registro
 
 - ☐ Email duplicado (incluso con mayúsculas distintas) → `EMAIL_ALREADY_REGISTERED`.
 - ☐ Email inválido → 400.
+- ☐ Registro → siempre `PLAYER`, aunque la petición traiga `"role": "ADMIN"`.
+- ☐ Contraseña de 7 caracteres → `INVALID_PASSWORD`. De 8 → OK. De 72 → OK. De 73 → `INVALID_PASSWORD`.
+- ☐ Lo que se guarda es el hash: tras registrar, `passwordHasher.matches(plain, user.passwordHash())` es true y el hash no es igual al texto plano.
+- ☐ Ninguna respuesta JSON contiene `password` ni `passwordHash`.
+- ☐ `PlainPassword.toString()` no contiene el valor.
+- ☐ Petición de admin con un `X-User-Id` de `PLAYER` → 403 `ADMIN_REQUIRED`.
+
+## R9 – Invitaciones de ADMIN
+
+Caducidad 72 h (configurable). Un solo uso. Solo se guarda el hash del token.
+
+- ☐ Un `PLAYER` intenta invitar → `ADMIN_REQUIRED`.
+- ☐ Invitar a un email ya registrado → `EMAIL_ALREADY_REGISTERED`.
+- ☐ Invitar → `PENDING`, `expiresAt = now + 72h`, se llama una vez a `InvitationNotifier` con el token en claro, y en el repositorio solo está el hash.
+- ☐ Invitar dos veces al mismo email → la primera pasa a `REVOKED` y solo funciona el token nuevo.
+- ☐ Aceptar con token válido → usuario `ADMIN` con el email de la invitación; invitación `ACCEPTED` con `acceptedAt`.
+- ☐ Aceptar a las 71 h 59 min → OK. Exactamente a las 72 h → `INVITATION_EXPIRED`.
+- ☐ Aceptar dos veces el mismo token → la segunda da `INVITATION_NOT_PENDING`.
+- ☐ Aceptar un token revocado → `INVITATION_NOT_PENDING`.
+- ☐ Token inventado → `INVITATION_NOT_FOUND`.
+- ☐ El email se registró como `PLAYER` después de invitar → al aceptar, `EMAIL_ALREADY_REGISTERED`. Promocionar a un jugador existente queda fuera de alcance.
+- ☐ (Concurrencia) Dos aceptaciones simultáneas del mismo token → se crea un solo `ADMIN`.
+
+## R10 – Primer ADMIN (bootstrap)
+
+- ☐ No hay ningún `ADMIN` y las propiedades están definidas → al arrancar se crea un `ADMIN`.
+- ☐ Ya existe un `ADMIN` → no se crea nada, aunque el email configurado sea otro.
+- ☐ Sin propiedades → no hace nada, y lo deja en el log como `WARN`.
+- ☐ Arrancar dos veces seguidas → sigue habiendo un solo admin de bootstrap (idempotente).
+- ☐ La contraseña de bootstrap no aparece en el log.
 
 ## R8 – Notificaciones
 

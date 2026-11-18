@@ -24,9 +24,11 @@ Paquete base: `com.alexizquierdo.courtbook`.
 
 ## Alcance (fase 1)
 
-- Alta y consulta de usuarios.
-- Alta y consulta de clubes, con su horario y sus ventanas de hora punta.
-- Alta y consulta de pistas de un club, con deporte, duración de franja y precios punta/valle.
+- Registro de usuarios con contraseña (hash BCrypt). Todos se registran como `PLAYER`.
+- Invitaciones de `ADMIN`: un admin invita por email con un token de un solo uso que caduca a las 72 h.
+- Creación del primer `ADMIN` al arrancar, a partir de la configuración.
+- Alta (solo `ADMIN`) y consulta de clubes, con su horario y sus ventanas de hora punta.
+- Alta (solo `ADMIN`) y consulta de pistas de un club, con deporte, duración de franja y precios punta/valle.
 - Consulta de disponibilidad de una pista para un día: franjas libres/ocupadas y precio de cada una.
 - Crear reserva de una franja.
 - Cancelar reserva, con penalización si faltan menos de 24 h.
@@ -37,7 +39,8 @@ Paquete base: `com.alexizquierdo.courtbook`.
 
 ## Fuera de alcance (fase 1)
 
-- Autenticación y autorización. El usuario se identifica con la cabecera `X-User-Id`. **JWT llega en la fase 2.**
+- Login. En la fase 1 el usuario se identifica con la cabecera `X-User-Id`, y los endpoints de admin comprueban el rol de ese usuario. **Fase 2:** login con email y contraseña (JWT). **Fase 3:** login con Google.
+- Recuperar la contraseña, verificar el email, promocionar a admin a un jugador que ya existe.
 - Pagos reales. La penalización se registra como importe, no se cobra.
 - Reservas de varias franjas seguidas, reservas recurrentes, listas de espera.
 - Partidos abiertos, invitar jugadores, dividir el pago.
