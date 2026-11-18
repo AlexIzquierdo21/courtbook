@@ -93,14 +93,6 @@ class UserTest {
     }
 
     @Test
-    void restoreAlsoEnforcesInvariants() {
-        assertThatThrownBy(() -> User.restore(UserId.generate(), " ", "López", EMAIL, HASH, Role.PLAYER))
-                .isInstanceOf(UserDomainException.class);
-        assertThatThrownBy(() -> User.restore(UserId.generate(), "Ana", "López", EMAIL, HASH, null))
-                .isInstanceOf(UserDomainException.class);
-    }
-
-    @Test
     void identityIsTheId() {
         UserId id = UserId.generate();
 

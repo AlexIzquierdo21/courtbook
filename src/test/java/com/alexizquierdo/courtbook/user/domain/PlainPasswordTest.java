@@ -1,6 +1,7 @@
 package com.alexizquierdo.courtbook.user.domain;
 
 import com.alexizquierdo.courtbook.user.domain.exception.InvalidPasswordException;
+import com.alexizquierdo.courtbook.user.domain.exception.UserDomainException;
 import com.alexizquierdo.courtbook.user.domain.valueobject.PlainPassword;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,6 +26,7 @@ class PlainPasswordTest {
     void rejectsNull() {
         assertThatThrownBy(() -> new PlainPassword(null))
                 .isInstanceOf(InvalidPasswordException.class)
+                .isInstanceOf(UserDomainException.class)
                 .hasFieldOrPropertyWithValue("code", "INVALID_PASSWORD");
     }
 

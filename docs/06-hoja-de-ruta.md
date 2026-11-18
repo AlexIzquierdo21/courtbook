@@ -16,7 +16,7 @@ Objetivo: el proyecto arranca y los tests de Testcontainers pasan.
 Criterios:
 - [x] `./mvnw spring-boot:run` arranca y levanta MySQL solo.
 - [x] `./mvnw verify` pasa con el test de contexto usando Testcontainers.
-- [ ] README con la sección "Cómo arrancar" verificada por ti.
+- [x] README con la sección "Cómo arrancar" verificada por ti.
 
 ## Sesión 1 – Dominio de `user` (casi hecha)
 Hecho: User, Email, UserId (UUID), PasswordHash, Role y sus tests. Te falta:
@@ -27,8 +27,8 @@ Hecho: User, Email, UserId (UUID), PasswordHash, Role y sus tests. Te falta:
 - Arregla `passwordHashIsNotPrinted`: compara con `HASH.value()`.
 
 Criterios:
-- [ ] Casos de R7 que son de dominio (contraseña, toString) en verde.
-- [ ] Ningún import de Spring/JPA en `user.domain`.
+- [x] Casos de R7 que son de dominio (contraseña, toString) en verde.
+- [x] Ningún import de Spring/JPA en `user.domain`.
 
 ## Sesión 2 – Aplicación de `user`: registro
 - Puertos `RegisterUserUseCase` y `GetUserQuery`, `UserRepository` y `PasswordHasher`.

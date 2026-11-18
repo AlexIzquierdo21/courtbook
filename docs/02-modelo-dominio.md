@@ -69,18 +69,21 @@ Las franjas **no se persisten**: se calculan al vuelo. "Franja horaria" es un va
 
 ## Excepciones de dominio
 
-Jerarquía bajo `DomainException` (unchecked). Cada una con un `code` estable que el `@RestControllerAdvice` usará:
+Jerarquía bajo `DomainException` (unchecked). Cada una con un `code` estable que el `@RestControllerAdvice` usará.
+
+Las excepciones de validación del módulo `user` heredan de `UserDomainException`, para poder tratar juntos todos los errores de usuario. Cada subclase conserva su propio `code` a través del constructor `protected UserDomainException(code, message)`:
 
 | Excepción | Código |
 |---|---|
 | `UserNotFoundException`, `ClubNotFoundException`, `CourtNotFoundException`, `ReservationNotFoundException` | `*_NOT_FOUND` |
 | `EmailAlreadyRegisteredException` | `EMAIL_ALREADY_REGISTERED` |
-| `InvalidPasswordException` | `INVALID_PASSWORD` |
+| `UserDomainException` (invariantes de `User`, `UserId`, `PasswordHash`) | `INVALID_USER` |
+| `InvalidPasswordException` (hereda de `UserDomainException`) | `INVALID_PASSWORD` |
 | `AdminRequiredException` | `ADMIN_REQUIRED` |
 | `InvitationNotFoundException` | `INVITATION_NOT_FOUND` |
 | `InvitationExpiredException` | `INVITATION_EXPIRED` |
 | `InvitationNotPendingException` | `INVITATION_NOT_PENDING` |
-| `InvalidEmailException` | `INVALID_EMAIL` |
+| `InvalidEmailException` (hereda de `UserDomainException`) | `INVALID_EMAIL` |
 | `InvalidSlotException` | `INVALID_SLOT` |
 | `SlotInPastException` | `SLOT_IN_PAST` |
 | `BookingTooFarInAdvanceException` | `BOOKING_TOO_FAR_IN_ADVANCE` |
