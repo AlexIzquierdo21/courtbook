@@ -58,6 +58,7 @@ Jerarquía bajo `DomainException` (unchecked). Cada una con un `code` estable qu
 |---|---|
 | `UserNotFoundException`, `ClubNotFoundException`, `CourtNotFoundException`, `ReservationNotFoundException` | `*_NOT_FOUND` |
 | `EmailAlreadyRegisteredException` | `EMAIL_ALREADY_REGISTERED` |
+| `InvalidEmailException` | `INVALID_EMAIL` |
 | `InvalidSlotException` | `INVALID_SLOT` |
 | `SlotInPastException` | `SLOT_IN_PAST` |
 | `BookingTooFarInAdvanceException` | `BOOKING_TOO_FAR_IN_ADVANCE` |
