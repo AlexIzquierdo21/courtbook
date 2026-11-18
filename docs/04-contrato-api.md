@@ -13,7 +13,7 @@ Cabecera de identidad (fase 1): `X-User-Id: <id>` en todos los endpoints de rese
 Validación: `name` 1–100, `email` válido, `role` obligatorio.
 Respuesta y `Location: /api/v1/users/{id}`:
 ```json
-{ "id": 1, "name": "Alex", "email": "alex@example.com", "role": "PLAYER" }
+{ "id": "3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b7c", "name": "Alex", "email": "alex@example.com", "role": "PLAYER" }
 ```
 Errores: 400, 409 `EMAIL_ALREADY_REGISTERED`.
 
@@ -81,7 +81,7 @@ Cabecera `X-User-Id`.
 Respuesta y `Location: /api/v1/reservations/{id}`:
 ```json
 {
-  "id": 100, "courtId": 10, "userId": 1,
+  "id": 100, "courtId": 10, "userId": "3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b7c",
   "start": "2026-11-20T18:30:00", "end": "2026-11-20T20:00:00",
   "price": "28.00", "status": "CONFIRMED", "penalty": "0.00",
   "createdAt": "2026-11-18T09:12:03.123", "cancelledAt": null

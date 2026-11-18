@@ -14,8 +14,8 @@ Objetivo: el proyecto arranca y los tests de Testcontainers pasan.
 - Completa `name` y `description` del `pom.xml`.
 
 Criterios:
-- [ ] `./mvnw spring-boot:run` arranca y levanta MySQL solo.
-- [ ] `./mvnw verify` pasa con el test de contexto usando Testcontainers.
+- [x] `./mvnw spring-boot:run` arranca y levanta MySQL solo.
+- [x] `./mvnw verify` pasa con el test de contexto usando Testcontainers.
 - [ ] README con la sección "Cómo arrancar" verificada por ti.
 
 ## Sesión 1 – Paquetes y value objects básicos

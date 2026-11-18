@@ -13,14 +13,14 @@ app_user 1 ──── * reservation * ──── 1 court * ──── 1 cl
 ### `app_user`
 (`user` es palabra reservada; no la uses.)
 
-| Columna | Tipo | Restricciones |
-|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT |
+| Columna | Tipo         | Restricciones |
+|---|--------------|---|
+| id | UUID         | PK |
 | name | VARCHAR(100) | NOT NULL |
 | email | VARCHAR(255) | NOT NULL, UNIQUE (`uk_app_user_email`) |
-| role | VARCHAR(20) | NOT NULL, CHECK in ('PLAYER','ADMIN') |
-| version | BIGINT | NOT NULL DEFAULT 0 |
-| created_at | DATETIME(6) | NOT NULL |
+| role | VARCHAR(20)  | NOT NULL, CHECK in ('PLAYER','ADMIN') |
+| version | BIGINT       | NOT NULL DEFAULT 0 |
+| created_at | DATETIME(6)  | NOT NULL |
 
 ### `club`
 
@@ -65,7 +65,7 @@ Restricciones: `uk_court_club_name (club_id, name)`.
 |---|---|---|
 | id | BIGINT | PK |
 | court_id | BIGINT | NOT NULL, FK → court(id) |
-| user_id | BIGINT | NOT NULL, FK → app_user(id) |
+| user_id | UUID | NOT NULL, FK → app_user(id) |
 | start_at | DATETIME | NOT NULL |
 | end_at | DATETIME | NOT NULL, CHECK `end_at > start_at` |
 | price | DECIMAL(8,2) | NOT NULL |

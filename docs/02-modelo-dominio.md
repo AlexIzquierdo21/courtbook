@@ -6,7 +6,8 @@ Todo en Java puro. Value objects como `record` con validación en el constructor
 
 | Record | Campos | Invariantes |
 |---|---|---|
-| `UserId`, `ClubId`, `CourtId`, `ReservationId` | `Long value` | no nulo, > 0 |
+| `UserId` | `UUID value` | no nulo |
+| `ClubId`, `CourtId`, `ReservationId` | `Long value` | no nulo, > 0 |
 | `Email` | `String value` | formato válido, se normaliza a minúsculas |
 | `Money` | `BigDecimal amount`, `Currency currency` | amount ≥ 0, escala 2, solo EUR en fase 1. Métodos `percentage(int)`, `isZero()` |
 | `TimeSlot` | `LocalDateTime start`, `LocalDateTime end` | start < end. Métodos `overlaps(TimeSlot)`, `duration()`, `startsWithin(...)` |
