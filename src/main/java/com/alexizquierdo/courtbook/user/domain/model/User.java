@@ -37,7 +37,7 @@ public class User {
                                    Email email, PasswordHash passwordHash) {
         return new User(UserId.generate(), firstName, lastName, email, passwordHash, Role.ADMIN);
     }
-
+    // Restores a user from persisted data
     public static User restore(UserId id, String firstName, String lastName,
                                Email email, PasswordHash passwordHash, Role role) {
         return new User(id, firstName, lastName, email, passwordHash, role);

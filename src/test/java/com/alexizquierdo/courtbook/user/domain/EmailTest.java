@@ -33,6 +33,12 @@ class EmailTest {
     void rejectsInvalidWithoutLeakingValue(String raw) {
         assertThatThrownBy(() -> Email.of(raw))
                 .isInstanceOf(InvalidEmailException.class)
-                .hasMessage("Email format is not valid");
+                .hasMessage("Email format is not valid")
+                .hasFieldOrPropertyWithValue("code", "INVALID_EMAIL");
+    }
+
+    @Test
+    void toStringIsTheNormalizedValue() {
+        assertThat(Email.of(" Ana@X.com ")).hasToString("ana@x.com");
     }
 }

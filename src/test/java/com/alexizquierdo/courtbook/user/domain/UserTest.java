@@ -6,7 +6,13 @@ import com.alexizquierdo.courtbook.user.domain.model.User;
 import com.alexizquierdo.courtbook.user.domain.valueobject.Email;
 import com.alexizquierdo.courtbook.user.domain.valueobject.PasswordHash;
 import com.alexizquierdo.courtbook.user.domain.valueobject.UserId;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -49,13 +55,41 @@ class UserTest {
     }
 
     @Test
-    void restoreKeepsIdAndRole() {
+    void restoreKeepsEveryField() {
         UserId id = UserId.generate();
 
         User user = User.restore(id, "Ana", "López", EMAIL, HASH, Role.ADMIN);
 
         assertThat(user.getId()).isEqualTo(id);
+        assertThat(user.getFirstName()).isEqualTo("Ana");
+        assertThat(user.getLastName()).isEqualTo("López");
+        assertThat(user.getEmail()).isEqualTo(EMAIL);
+        assertThat(user.getPasswordHash()).isEqualTo(HASH);
         assertThat(user.getRole()).isEqualTo(Role.ADMIN);
+    }
+
+    // Each case breaks exactly one field, so the message proves which check fired.
+    static Stream<Arguments> invalidUsers() {
+        UserId id = UserId.generate();
+        return Stream.of(
+                Arguments.of("Id", (ThrowingCallable) () -> User.restore(null, "Ana", "López", EMAIL, HASH, Role.PLAYER)),
+                Arguments.of("First name", (ThrowingCallable) () -> User.create(null, "López", EMAIL, HASH)),
+                Arguments.of("First name", (ThrowingCallable) () -> User.create(" ", "López", EMAIL, HASH)),
+                Arguments.of("Last name", (ThrowingCallable) () -> User.create("Ana", null, EMAIL, HASH)),
+                Arguments.of("Last name", (ThrowingCallable) () -> User.create("Ana", " ", EMAIL, HASH)),
+                Arguments.of("Email", (ThrowingCallable) () -> User.create("Ana", "López", null, HASH)),
+                Arguments.of("Password hash", (ThrowingCallable) () -> User.create("Ana", "López", EMAIL, null)),
+                Arguments.of("Role", (ThrowingCallable) () -> User.restore(id, "Ana", "López", EMAIL, HASH, null))
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalidUsers")
+    void rejectsMissingField(String field, ThrowingCallable build) {
+        assertThatThrownBy(build)
+                .isInstanceOf(UserDomainException.class)
+                .hasMessageStartingWith(field + " cannot be")
+                .hasFieldOrPropertyWithValue("code", "INVALID_USER");
     }
 
     @Test
@@ -70,13 +104,12 @@ class UserTest {
     void identityIsTheId() {
         UserId id = UserId.generate();
 
-        assertThat(User.restore(id, "Ana", "López", EMAIL, HASH, Role.PLAYER))
-                .isEqualTo(User.restore(id, "Otra", "Persona", Email.of("otra@x.com"), HASH, Role.ADMIN))
-                .isNotEqualTo(User.create("Ana", "López", EMAIL, HASH));
-    }
+        User user = User.restore(id, "Ana", "López", EMAIL, HASH, Role.PLAYER);
+        User sameIdOtherData = User.restore(id, "Otra", "Persona", Email.of("otra@x.com"), HASH, Role.ADMIN);
 
-    @Test
-    void passwordHashIsNotPrinted() {
-        assertThat(HASH.toString()).doesNotContain("hash");
+        assertThat(user)
+                .isEqualTo(sameIdOtherData)
+                .hasSameHashCodeAs(sameIdOtherData)
+                .isNotEqualTo(User.create("Ana", "López", EMAIL, HASH));
     }
 }

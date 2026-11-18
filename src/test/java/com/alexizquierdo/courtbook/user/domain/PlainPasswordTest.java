@@ -24,7 +24,8 @@ class PlainPasswordTest {
     @Test
     void rejectsNull() {
         assertThatThrownBy(() -> new PlainPassword(null))
-                .isInstanceOf(InvalidPasswordException.class);
+                .isInstanceOf(InvalidPasswordException.class)
+                .hasFieldOrPropertyWithValue("code", "INVALID_PASSWORD");
     }
 
     @ParameterizedTest
