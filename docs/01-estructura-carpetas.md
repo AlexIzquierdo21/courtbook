@@ -6,7 +6,7 @@ Organización **por módulo de negocio** (package-by-feature) y, dentro de cada 
 
 | Módulo | Contiene | Por qué |
 |---|---|---|
-| `user` | User, UserId, Email, Role | Se llama `user`, no `auth`: autenticación es otra cosa y llega en la fase 2 (irá en su propio módulo `auth` o en `user/infrastructure/security`). |
+| `user` | User, UserId, Email, Role, PasswordHash, PlainPassword, AdminInvitation; puertos PasswordHasher, InvitationTokenGenerator e InvitationNotifier; el bootstrap del primer ADMIN | Se llama `user`, no `auth`: autenticación es otra cosa y llega en la fase 2 (irá en su propio módulo `auth` o en `user/infrastructure/security`). |
 | `club` | Club **y Court**, OpeningHours, PeakWindow, CourtPricing, SlotCalendar | Una pista no existe sin su club y el precio depende de las ventanas punta del club. Separarlos obligaría a llamadas entre módulos para cada cálculo. Si algún día la pista crece (mantenimiento, iluminación...), se extrae. |
 | `reservation` | Reservation, TimeSlot, ReservationStatus, BookingRules, PricingPolicy, CancellationPolicy, NotificationPort | El núcleo. Es el único módulo que depende de otros. |
 | `shared` | Money, ClockPort, DomainException base, el `@RestControllerAdvice` | Solo lo que de verdad usan varios. Si dudas, no va aquí: un `shared` gordo es un módulo basura. Los ids **no** van aquí; cada uno en su módulo. |
@@ -32,7 +32,10 @@ src/main/java/com/alexizquierdo/courtbook/
 │   │   └── usecase/                 # RegisterUserService, ...
 │   └── infrastructure/
 │       ├── rest/                    # UserController, dto/, mapper/
-│       ├── persistence/             # UserEntity, UserJpaRepository, mapper, UserPersistenceAdapter
+│       ├── persistence/             # UserEntity, AdminInvitationEntity, repos, mappers, adapters
+│       ├── security/                # BCryptPasswordHasher, SecureRandomTokenGenerator
+│       ├── notification/            # LoggingInvitationNotifier (falso)
+│       ├── bootstrap/               # AdminBootstrapRunner (ApplicationRunner) + BootstrapAdminProperties
 │       └── config/                  # UserConfiguration (@Bean)
 │
 ├── club/

@@ -7,4 +7,8 @@ public class UserDomainException extends DomainException {
     public UserDomainException(String message) {
         super("INVALID_USER", message);
     }
+
+    protected UserDomainException(String code, String message) {
+        super(code, message);
+    }
 }

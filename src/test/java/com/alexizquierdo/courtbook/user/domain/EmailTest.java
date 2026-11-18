@@ -1,6 +1,7 @@
 package com.alexizquierdo.courtbook.user.domain;
 
 import com.alexizquierdo.courtbook.user.domain.exception.InvalidEmailException;
+import com.alexizquierdo.courtbook.user.domain.exception.UserDomainException;
 import com.alexizquierdo.courtbook.user.domain.valueobject.Email;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,6 +34,13 @@ class EmailTest {
     void rejectsInvalidWithoutLeakingValue(String raw) {
         assertThatThrownBy(() -> Email.of(raw))
                 .isInstanceOf(InvalidEmailException.class)
-                .hasMessage("Email format is not valid");
+                .isInstanceOf(UserDomainException.class)
+                .hasMessage("Email format is not valid")
+                .hasFieldOrPropertyWithValue("code", "INVALID_EMAIL");
+    }
+
+    @Test
+    void toStringIsTheNormalizedValue() {
+        assertThat(Email.of(" Ana@X.com ")).hasToString("ana@x.com");
     }
 }

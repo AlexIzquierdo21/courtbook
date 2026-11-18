@@ -32,6 +32,12 @@ public class User {
         return new User(UserId.generate(), firstName, lastName, email, passwordHash, Role.PLAYER);
     }
 
+    // Only for the first-admin bootstrap and invitation acceptance
+    public static User createAdmin(String firstName, String lastName,
+                                   Email email, PasswordHash passwordHash) {
+        return new User(UserId.generate(), firstName, lastName, email, passwordHash, Role.ADMIN);
+    }
+    // Restores a user from persisted data
     public static User restore(UserId id, String firstName, String lastName,
                                Email email, PasswordHash passwordHash, Role role) {
         return new User(id, firstName, lastName, email, passwordHash, role);
@@ -59,6 +65,10 @@ public class User {
 
     public Role getRole() {
         return role;
+    }
+
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
     }
 
     @Override

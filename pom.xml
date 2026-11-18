@@ -11,8 +11,8 @@
 	<groupId>com.alexizquierdo</groupId>
 	<artifactId>courtbook</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>CourtBook</name>
+	<description>API REST para reservar pistas de pádel y tenis en clubes, con arquitectura hexagonal</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -104,6 +104,25 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Load Mockito as an agent; JDK 21+ warns on dynamic agent attach. -->
+					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
