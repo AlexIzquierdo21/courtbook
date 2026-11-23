@@ -10,7 +10,7 @@ Todo en Java puro. Value objects como `record` con validación en el constructor
 | `ClubId`, `CourtId`, `ReservationId` | `Long value` | no nulo, > 0 |
 | `Email` | `String value` | formato válido, se normaliza a minúsculas |
 | `PasswordHash` | `String value` | no vacío; `toString` enmascarado |
-| `PlainPassword` | `String value` | 8–72 caracteres; `toString` enmascarado. **Nunca** se persiste ni se loguea; solo viaja hasta `PasswordHasher` |
+| `PlainPassword` | `String value` | reglas de D14 (8 caracteres a 72 bytes, sin espacios, mayúscula, minúscula, dígito y especial); `toString` enmascarado. **Nunca** se persiste ni se loguea; solo viaja hasta `PasswordHasher` |
 | `InvitationId` | `UUID value` | no nulo |
 | `InvitationTokenHash` | `String value` | 64 caracteres hex (SHA-256) |
 | `Money` | `BigDecimal amount`, `Currency currency` | amount ≥ 0, escala 2, solo EUR en fase 1. Métodos `percentage(int)`, `isZero()` |
@@ -91,12 +91,15 @@ Las excepciones de validación del módulo `user` heredan de `UserDomainExceptio
 | `SlotAlreadyBookedException` | `SLOT_ALREADY_BOOKED` |
 | `MaxActiveReservationsException` | `MAX_ACTIVE_RESERVATIONS` |
 | `CancellationNotAllowedException` | `CANCELLATION_NOT_ALLOWED` |
-| `NotReservationOwnerException` | `NOT_RESERVATION_OWNER` |
-| `ConcurrentModificationException` (nombre propio, no el de `java.util`) | `CONCURRENT_MODIFICATION` |
+| `ConcurrentModificationException` (en `shared.domain`; nombre propio, no el de `java.util`) | `CONCURRENT_MODIFICATION` |
+| `ClubNameAlreadyExistsException` | `CLUB_NAME_ALREADY_EXISTS` |
+| `CourtNameAlreadyExistsException` | `COURT_NAME_ALREADY_EXISTS` |
+
+Una reserva ajena se trata como inexistente (`ReservationNotFoundException`), para no revelar que existe.
 
 ## Puertos
 
-### Entrada (`application/port/in`)
+### Entrada (`application/port/in`, solo interfaces; la implementación es `<Nombre>Service` en `application/usecase`)
 
 | Interfaz | Entrada | Salida |
 |---|---|---|
@@ -108,7 +111,7 @@ Las excepciones de validación del módulo `user` heredan de `UserDomainExceptio
 | `CreateClubUseCase` | `CreateClubCommand(requesterId, name, address, openingHours, peakWindows)` | `Club` |
 | `GetClubQuery` / `ListClubsQuery` | `ClubId` / — | `Club` / `List<Club>` |
 | `CreateCourtUseCase` | `CreateCourtCommand(requesterId, clubId, name, sport, slotDuration, offPeak, peak)` | `Court` |
-| `DeactivateCourtUseCase` | `CourtId` | `Court` |
+| `DeactivateCourtUseCase` | `DeactivateCourtCommand(requesterId, courtId)` | `Court` |
 | `ListCourtsQuery` | `ClubId` | `List<Court>` |
 | `GetAvailabilityQuery` | `CourtId`, `LocalDate` | `List<SlotAvailability(slot, free, price, peak)>` |
 | `CreateReservationUseCase` | `CreateReservationCommand(userId, courtId, start)` | `Reservation` |
@@ -122,7 +125,7 @@ Devolver objetos de dominio a infraestructura está permitido; el controlador lo
 
 | Interfaz | Métodos mínimos |
 |---|---|
-| `UserRepository` | `save`, `findById`, `existsByEmail`, `existsAdmin()`, `lockForBooking(UserId)` (ver doc 03) |
+| `UserRepository` | `save`, `findById`, `existsByEmail`, `existsAdmin()` |
 | `PasswordHasher` | `PasswordHash hash(PlainPassword)`, `boolean matches(PlainPassword, PasswordHash)` |
 | `AdminInvitationRepository` | `save`, `findByTokenHash`, `findPendingByEmail` |
 | `InvitationTokenGenerator` | `String newToken()`, `InvitationTokenHash hash(String token)` |
@@ -130,16 +133,17 @@ Devolver objetos de dominio a infraestructura está permitido; el controlador lo
 | `ClubRepository` | `save`, `findById`, `findAll` |
 | `CourtRepository` | `save`, `findById`, `findByClub` |
 | `ReservationRepository` | `save`, `findById`, `findConfirmedByCourtAndDay(CourtId, LocalDate)`, `countActiveByUser(UserId, now)`, `findByUser(UserId)` |
+| `BookingQuotaLock` (módulo `reservation`) | `acquire(UserId)`: serializa las reservas de un mismo usuario (ver doc 03) |
 | `ClockPort` | `LocalDateTime now()` |
 | `NotificationPort` | `reservationConfirmed(Reservation)`, `reservationCancelled(Reservation)` |
 
 ## Flujo de `CreateReservationService` (orden esperado)
 
-1. Cargar usuario, pista y club (404 si no existen).
+1. Cargar usuario (`GetUserQuery`), pista y club (`GetCourtQuery`, `GetClubQuery`); 404 si no existen.
 2. Pista activa.
 3. Construir `TimeSlot` desde `start` + `slotDuration`; validar con `SlotCalendar`.
 4. `now = clock.now()`; no en pasado; no más allá de `maxAdvanceDays`.
-5. Contar reservas activas del usuario < `maxActiveReservations`.
+5. `bookingQuotaLock.acquire(userId)` y contar reservas activas del usuario < `maxActiveReservations`.
 6. Comprobar que la franja está libre (comprobación "amable"; la garantía real es el índice único).
 7. Calcular precio con `PricingPolicy`.
 8. `Reservation.create(...)`, guardar.
@@ -147,7 +151,7 @@ Devolver objetos de dominio a infraestructura está permitido; el controlador lo
 
 ## Comprobar que el solicitante es ADMIN
 
-Los casos de uso de admin (`InviteAdmin`, `CreateClub`, `CreateCourt`, `DeactivateCourt`) reciben `requesterId` y lo primero que hacen es cargar el usuario y lanzar `AdminRequiredException` si no es `ADMIN`. Para eso `club` usa `GetUserQuery` del módulo `user` (permitido según el doc 01). Cuando llegue el login, la autorización pasará a Spring Security y esta comprobación se queda como defensa en profundidad, o la quitas. Lo decides entonces.
+Los casos de uso de admin (`InviteAdmin`, `CreateClub`, `CreateCourt`, `DeactivateCourt`) reciben `requesterId` en su command y lo primero que hacen es cargar el usuario y lanzar `AdminRequiredException` si no es `ADMIN`. Para eso `club` usa `GetUserQuery` del módulo `user` (permitido según el doc 01). Cuando llegue el login, la autorización pasará a Spring Security y esta comprobación se queda como defensa en profundidad, o la quitas. Lo decides entonces.
 
 ## Flujo de `AcceptAdminInvitationService`
 

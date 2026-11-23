@@ -13,7 +13,7 @@ Público (sin cabecera).
 ```json
 { "firstName": "Alex", "lastName": "Izquierdo", "email": "alex@example.com", "password": "unaClaveLarga" }
 ```
-Validación: nombres de 1 a 100 caracteres, `email` válido, `password` de 8 a 72. **No hay campo `role`**: si llega, se ignora y el usuario es siempre `PLAYER`.
+Validación: nombres de 1 a 100 caracteres, `email` válido, `password` con las reglas de D14 (la validación real la hace `PlainPassword`; en el DTO basta con `@NotBlank`). **No hay campo `role`**: si llega, se ignora y el usuario es siempre `PLAYER`.
 Respuesta y `Location: /api/v1/users/{id}`:
 ```json
 { "id": "3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b7c", "firstName": "Alex", "lastName": "Izquierdo", "email": "alex@example.com", "role": "PLAYER" }
@@ -65,7 +65,7 @@ Respuesta: el usuario creado, con `role: ADMIN`. El email sale de la invitación
   ]
 }
 ```
-Errores: 400 (incluido `closesAt <= opensAt`), 409 si el nombre ya existe.
+Errores: 400 (incluido `closesAt <= opensAt`), 403 `ADMIN_REQUIRED`, 409 `CLUB_NAME_ALREADY_EXISTS`.
 
 ### `GET /clubs` → 200 (lista) · `GET /clubs/{id}` → 200 | 404
 
@@ -80,10 +80,11 @@ Respuesta:
 { "id": 10, "clubId": 1, "name": "Pista 1", "sport": "PADEL", "slotMinutes": 90,
   "offPeakPrice": "18.00", "peakPrice": "28.00", "active": true }
 ```
-Errores: 400, 404 club, 409 nombre repetido en el club.
+Errores: 400, 403 `ADMIN_REQUIRED`, 404 `CLUB_NOT_FOUND`, 409 `COURT_NAME_ALREADY_EXISTS`.
 
 ### `GET /clubs/{clubId}/courts` → 200
 ### `POST /courts/{courtId}/deactivate` → 200 (idempotente)
+Errores: 403 `ADMIN_REQUIRED`, 404 `COURT_NOT_FOUND`.
 
 ## Disponibilidad
 
@@ -148,6 +149,17 @@ Devuelve la reserva con `status: CANCELLED`, `penalty` y `cancelledAt`.
 | 422 | `CANCELLATION_NOT_ALLOWED` | ya cancelada o ya empezada |
 
 Por qué `POST .../cancel` y no `DELETE`: la reserva no desaparece, cambia de estado y devuelve un resultado (penalización).
+
+## Mapeo de excepciones a HTTP
+
+| Tipo | HTTP |
+|---|---|
+| Bean Validation del DTO | 400 `VALIDATION_ERROR` |
+| Validación de value objects (`INVALID_EMAIL`, `INVALID_PASSWORD`, `INVALID_USER`) | 400 |
+| `*_NOT_FOUND` | 404 |
+| `ADMIN_REQUIRED` | 403 |
+| `*_ALREADY_*`, `SLOT_ALREADY_BOOKED`, `CONCURRENT_MODIFICATION` | 409 |
+| Reglas de negocio (`INVALID_SLOT`, `SLOT_IN_PAST`, `MAX_ACTIVE_RESERVATIONS`, `INVITATION_EXPIRED`...) | 422 |
 
 ## Formato de error (RFC 9457)
 

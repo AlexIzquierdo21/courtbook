@@ -76,9 +76,10 @@ La franja es punta si su **inicio** está dentro de alguna `PeakWindow` del club
 ## R7 – Usuarios y registro
 
 - ☐ Email duplicado (incluso con mayúsculas distintas) → `EMAIL_ALREADY_REGISTERED`.
-- ☐ Email inválido → 400.
+- ☐ Email inválido → 400 `INVALID_EMAIL`.
 - ☐ Registro → siempre `PLAYER`, aunque la petición traiga `"role": "ADMIN"`.
-- ☐ Contraseña de 7 caracteres → `INVALID_PASSWORD`. De 8 → OK. De 72 → OK. De 73 → `INVALID_PASSWORD`.
+- ☐ Contraseña de 7 caracteres → `INVALID_PASSWORD`. De 8 → OK. De 72 bytes → OK. De 73 bytes → `INVALID_PASSWORD` (cuenta bytes: `ñ` son 2).
+- ☐ Sin mayúscula, minúscula, dígito o carácter especial, o con algún espacio (incluido U+00A0) → `INVALID_PASSWORD`.
 - ☐ Lo que se guarda es el hash: tras registrar, `passwordHasher.matches(plain, user.passwordHash())` es true y el hash no es igual al texto plano.
 - ☐ Ninguna respuesta JSON contiene `password` ni `passwordHash`.
 - ☐ `PlainPassword.toString()` no contiene el valor.

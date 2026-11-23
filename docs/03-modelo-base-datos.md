@@ -124,9 +124,18 @@ En Hibernate, `active_marker` se mapea como de solo lectura (`insertable = false
 |---|---|
 | Dos usuarios reservan la misma franja a la vez | Índice único (arriba). No es bloqueo optimista; es una restricción. |
 | Dos cancelaciones / cancelación y modificación simultáneas de la misma reserva | `@Version` en `reservation`. El segundo `UPDATE` falla → `ConcurrentModificationException` → 409. |
-| El mismo usuario lanza 2 reservas en paralelo teniendo 2 activas con máximo 3 | Ambas cuentan 2 y crean la 3.ª y la 4.ª. Solución: `UserRepository.lockForBooking(userId)` incrementa la `version` de `app_user` dentro de la transacción de reserva (`OPTIMISTIC_FORCE_INCREMENT`). La segunda transacción falla al hacer commit → 409, el cliente reintenta y ya recibe `MAX_ACTIVE_RESERVATIONS`. |
+| El mismo usuario lanza 2 reservas en paralelo teniendo 2 activas con máximo 3 | Ambas cuentan 2 y crean la 3.ª y la 4.ª. Solución: `BookingQuotaLock.acquire(userId)` carga (o crea) la fila de `booking_quota` del usuario y le sube la `version` dentro de la transacción de reserva (`OPTIMISTIC_FORCE_INCREMENT`). La segunda transacción falla al hacer commit → 409; el cliente reintenta y ya recibe `MAX_ACTIVE_RESERVATIONS`. Si las dos crean la fila a la vez, choca la PK y también es un 409. |
 
 Entiende bien el tercer caso: es el que más se pregunta en entrevistas.
+
+Por qué una tabla propia y no la `version` de `app_user`: `app_user` es del módulo `user`, y `reservation` no puede tocar el repositorio ni la tabla de otro módulo (doc 01). Además, mezclarías dos motivos de cambio en una misma versión: editar el perfil haría fallar una reserva.
+
+### `booking_quota` (módulo `reservation`)
+
+| Columna | Tipo | Restricciones |
+|---|---|---|
+| user_id | BINARY(16) | PK, FK → app_user(id) |
+| version | BIGINT | NOT NULL DEFAULT 0 |
 
 ## Migraciones previstas
 
@@ -136,7 +145,7 @@ Entiende bien el tercer caso: es el que más se pregunta en entrevistas.
 | `V2__create_admin_invitation.sql` | `admin_invitation` |
 | `V3__create_club_and_peak_window.sql` | `club`, `peak_window` |
 | `V4__create_court.sql` | `court` |
-| `V5__create_reservation.sql` | `reservation` + columna generada + índices |
+| `V5__create_reservation.sql` | `reservation` + columna generada + índices, y `booking_quota` |
 
 El primer ADMIN **no** va en una migración (D16).
 

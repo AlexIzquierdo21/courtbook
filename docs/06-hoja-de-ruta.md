@@ -20,7 +20,7 @@ Criterios:
 
 ## Sesión 1 – Dominio de `user` (casi hecha)
 Hecho: User, Email, UserId (UUID), PasswordHash, Role y sus tests. Te falta:
-- `PlainPassword` (8–72 caracteres, `toString` enmascarado).
+- `PlainPassword` (reglas de D14, `toString` enmascarado).
 - Que `InvalidEmailException` herede de `UserDomainException`, o justifica por qué no.
 - Validar el null de `UserId` en el constructor compacto, no en `of`. `UserId.of("x")` no puede lanzar `IllegalArgumentException`: tiene que ser una excepción de dominio.
 - `User.createAdmin(...)` e `isAdmin()`.
@@ -31,12 +31,14 @@ Criterios:
 - [x] Ningún import de Spring/JPA en `user.domain`.
 
 ## Sesión 2 – Aplicación de `user`: registro
-- Puertos `RegisterUserUseCase` y `GetUserQuery`, `UserRepository` y `PasswordHasher`.
-- `RegisterUserService` y `GetUserService`.
+- Interfaces en `user/application/port/in`: `RegisterUserUseCase`, `GetUserQuery` y el record `RegisterUserCommand`.
+- Interfaces en `user/application/port/out`: `UserRepository` y `PasswordHasher`.
+- Clases en `user/application/usecase`: `RegisterUserService` y `GetUserService`.
 - Fakes en `src/test`: repositorio en memoria y un `PasswordHasher` falso (por ejemplo `"hashed:" + plain`).
 
 Criterios:
-- [ ] Casos de R7 de aplicación (duplicado, siempre PLAYER, se guarda el hash) en verde, sin Spring.
+- [x] Casos de R7 de aplicación (duplicado, siempre PLAYER, se guarda el hash) en verde, sin Spring.
+- [x] En `port/in` y `port/out` solo hay interfaces y records.
 
 ## Sesión 3 – Persistencia de `user` y BCrypt
 - `V1__create_app_user.sql` con `BINARY(16)`.
@@ -122,7 +124,7 @@ Criterios:
 - [ ] R2, R3 y R4 (sin los de concurrencia) y R8 en verde, sin Spring.
 
 ## Sesión 13 – `reservation`: persistencia y antisolapes
-- `V5__create_reservation.sql` con la columna generada y los índices, el adaptador, la traducción de la violación del índice, `@Version` y `lockForBooking`.
+- `V5__create_reservation.sql` con la columna generada y los índices, el adaptador, la traducción de la violación del índice, `@Version` y `BookingQuotaLock` con su tabla `booking_quota`.
 
 Criterios:
 - [ ] Dos `CONFIRMED` iguales dan la excepción de dominio. Cancelar y volver a reservar la misma franja funciona.
