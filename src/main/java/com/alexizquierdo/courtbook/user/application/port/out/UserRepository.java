@@ -15,4 +15,6 @@ public interface UserRepository {
     Optional<User> findByEmail(Email email);
 
     boolean existsByEmail(Email email);
+
+    boolean existsAdmin();
 }

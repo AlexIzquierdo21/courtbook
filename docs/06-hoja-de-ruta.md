@@ -46,9 +46,9 @@ Criterios:
 - Añade `spring-security-crypto` (solo esa librería) y escribe `BCryptPasswordHasher`.
 
 Criterios:
-- [ ] `@DataJpaTest` con Testcontainers: guardar, buscar por id, `existsByEmail` (sin distinguir mayúsculas) y `existsAdmin`.
-- [ ] El UUID sobrevive a la ida y vuelta: el que guardas es el que lees.
-- [ ] Test de `BCryptPasswordHasher`: `matches` da true con la buena y false con otra.
+- [x] `@DataJpaTest` con Testcontainers: guardar, buscar por id, `existsByEmail` (sin distinguir mayúsculas) y `existsAdmin`.
+- [x] El UUID sobrevive a la ida y vuelta: el que guardas es el que lees.
+- [x] Test de `BCryptPasswordHasher`: `matches` da true con la buena y false con otra.
 
 ## Sesión 4 – Configuración, REST de `user` y errores base
 - `UserConfiguration` con los `@Bean` y el decorador transaccional (doc 01).

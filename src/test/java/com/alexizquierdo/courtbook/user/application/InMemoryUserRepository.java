@@ -34,6 +34,11 @@ public class InMemoryUserRepository implements UserRepository {
         return findByEmail(email).isPresent();
     }
 
+    @Override
+    public boolean existsAdmin() {
+        return users.values().stream().anyMatch(User::isAdmin);
+    }
+
     public int count() {
         return users.size();
     }
