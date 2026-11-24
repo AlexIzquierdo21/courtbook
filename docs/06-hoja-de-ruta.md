@@ -2,6 +2,8 @@
 
 Sesiones de 1–2 h. Se avanza **por módulo y de punta a punta**: primero `user` entero (dominio → aplicación → persistencia → REST), después `club` y por último `reservation`. Dentro de cada módulo, de dentro hacia fuera. No pases a la siguiente sesión sin cumplir los criterios de la actual.
 
+**Estado (2026-11-24):** sesiones 0–5 hechas. Siguiente: sesión 6.
+
 **Definición de hecho (todas las sesiones):** `./mvnw verify` en verde, sin código comentado ni `TODO` sin explicar, un commit por sesión con mensaje claro (`feat(user): add Email value object`). Me pasas el diff o el commit y lo reviso.
 
 ---
@@ -18,8 +20,8 @@ Criterios:
 - [x] `./mvnw verify` pasa con el test de contexto usando Testcontainers.
 - [x] README con la sección "Cómo arrancar" verificada por ti.
 
-## Sesión 1 – Dominio de `user` (casi hecha)
-Hecho: User, Email, UserId (UUID), PasswordHash, Role y sus tests. Te falta:
+## Sesión 1 – Dominio de `user`
+Hecho: User, Email, UserId (UUID), PasswordHash, Role y sus tests. Pendientes que quedaron resueltos:
 - `PlainPassword` (reglas de D14, `toString` enmascarado).
 - Que `InvalidEmailException` herede de `UserDomainException`, o justifica por qué no.
 - Validar el null de `UserId` en el constructor compacto, no en `of`. `UserId.of("x")` no puede lanzar `IllegalArgumentException`: tiene que ser una excepción de dominio.
@@ -66,7 +68,12 @@ Criterios:
 - En local, las propiedades por variable de entorno. **No** las pongas con valores en `application.yaml` del repo.
 
 Criterios:
-- [ ] Todos los casos de R10 en verde: los de lógica con fakes y uno de integración con `@SpringBootTest`.
+- [x] Todos los casos de R10 en verde: los de lógica con fakes y uno de integración con `@SpringBootTest`.
+
+Decisiones tomadas:
+- `User` exige nombre y apellidos y D16 solo configura email y contraseña: el admin de bootstrap se llama `Admin CourtBook`.
+- Primero se mira `existsAdmin()` y después se validan las propiedades: con un admin ya creado, unas propiedades viejas o inválidas no rompen el arranque.
+- Propiedades a medias o en blanco cuentan como "sin propiedades" (`WARN`). Email o contraseña inválidos, o un email ya registrado como `PLAYER`, paran el arranque.
 
 ## Sesión 6 – Invitaciones: dominio y aplicación
 - `AdminInvitation`, `InvitationStatus`, `InvitationId`, `InvitationTokenHash` y sus excepciones.

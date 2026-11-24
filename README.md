@@ -67,6 +67,16 @@ Paquete base: `com.alexizquierdo.courtbook`.
 ./mvnw verify            # tests, incluidos los de Testcontainers
 ```
 
+### Primer ADMIN (D16)
+
+Al arrancar, si no existe ningún `ADMIN`, se crea uno con estas variables de entorno. Sin ellas la app arranca igual y lo avisa con un `WARN`. Nunca las pongas con valores en `application.yaml`.
+
+```bash
+export COURTBOOK_BOOTSTRAP_ADMIN_EMAIL=admin@courtbook.local
+export COURTBOOK_BOOTSTRAP_ADMIN_PASSWORD='Cambia-3sto'   # reglas de D14
+./mvnw spring-boot:run
+```
+
 ## Normas no negociables
 
 1. El dominio es Java puro: ni Spring, ni JPA, ni Lombok. Si borras Spring del classpath, `domain` y `application` compilan.
