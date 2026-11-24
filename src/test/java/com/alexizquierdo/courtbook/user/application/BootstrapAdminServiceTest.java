@@ -11,13 +11,17 @@ import com.alexizquierdo.courtbook.user.domain.valueobject.PasswordHash;
 import com.alexizquierdo.courtbook.user.domain.valueobject.PlainPassword;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BootstrapAdminServiceTest {
 
     private static final String EMAIL = "root@courtbook.dev";
-    private static final String PASSWORD = "Bootstr4p!";
+    // Generated, not hardcoded: no password literal for secret scanners (GitGuardian) to flag.
+    // "Aa1!" satisfies PlainPassword's character rules; the UUID adds length.
+    private static final String PASSWORD = "Aa1!" + UUID.randomUUID();
     private static final PasswordHash HASH = new PasswordHash("hashed:Secret1!");
 
     private final InMemoryUserRepository repository = new InMemoryUserRepository();

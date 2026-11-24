@@ -15,19 +15,29 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 // Registered before SpringExtension so the startup logs (where the runner fires) are captured too.
 @ExtendWith(OutputCaptureExtension.class)
-@SpringBootTest(properties = {
-        "courtbook.bootstrap.admin.email=" + AdminBootstrapIntegrationTest.EMAIL,
-        "courtbook.bootstrap.admin.password=" + AdminBootstrapIntegrationTest.PASSWORD})
+@SpringBootTest
 @Import(TestcontainersConfiguration.class)
 class AdminBootstrapIntegrationTest {
 
-    static final String EMAIL = "root@courtbook.dev";
-    static final String PASSWORD = "Bootstr4p!";
+    private static final String EMAIL = "root@courtbook.dev";
+    // Generated, not hardcoded: no password literal for secret scanners (GitGuardian) to flag.
+    // "Aa1!" satisfies PlainPassword's character rules; the UUID adds length.
+    private static final String PASSWORD = "Aa1!" + UUID.randomUUID();
+
+    @DynamicPropertySource
+    static void adminProperties(DynamicPropertyRegistry registry) {
+        registry.add("courtbook.bootstrap.admin.email", () -> EMAIL);
+        registry.add("courtbook.bootstrap.admin.password", () -> PASSWORD);
+    }
 
     @Autowired
     private UserRepository userRepository;

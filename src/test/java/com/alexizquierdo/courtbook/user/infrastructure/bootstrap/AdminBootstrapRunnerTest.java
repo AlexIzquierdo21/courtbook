@@ -11,11 +11,15 @@ import com.alexizquierdo.courtbook.user.domain.valueobject.PasswordHash;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+
+import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,7 +28,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AdminBootstrapRunnerTest {
 
     private static final String EMAIL = "root@courtbook.dev";
-    private static final String PASSWORD = "Bootstr4p!";
+    // Generated, not hardcoded: no password literal for secret scanners (GitGuardian) to flag.
+    // "Aa1!" satisfies PlainPassword's character rules; the UUID adds length.
+    private static final String PASSWORD = "Aa1!" + UUID.randomUUID();
     private static final ApplicationArguments NO_ARGS = new DefaultApplicationArguments();
 
     private final InMemoryUserRepository repository = new InMemoryUserRepository();
@@ -53,9 +59,17 @@ class AdminBootstrapRunnerTest {
         assertThat(output).contains("an ADMIN already exists").doesNotContain(PASSWORD);
     }
 
+    private static Stream<Arguments> incompleteProperties() {
+        return Stream.of(
+                Arguments.of(null, null),
+                Arguments.of(EMAIL, null),
+                Arguments.of(null, PASSWORD),
+                Arguments.of(" ", " "));
+    }
+
     // Missing, partial or blank properties: nothing is created and a WARN says why.
     @ParameterizedTest
-    @CsvSource({",", "root@courtbook.dev,", ",Bootstr4p!", "' ',' '"})
+    @MethodSource("incompleteProperties")
     void withoutPropertiesDoesNothingAndWarns(String email, String password, CapturedOutput output) {
         runner(email, password).run(NO_ARGS);
 
