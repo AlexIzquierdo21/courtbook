@@ -57,8 +57,8 @@ Criterios:
 - Resolución de `X-User-Id` como UUID, reutilizable por todos los controladores.
 
 Criterios:
-- [ ] `@WebMvcTest`: 201 con `Location`, 400 con `errors`, 409 `EMAIL_ALREADY_REGISTERED`, y ni rastro de la contraseña en el JSON.
-- [ ] Cero `@Service`/`@Component` en `user.application`.
+- [x] `@WebMvcTest`: 201 con `Location`, 400 con `errors`, 409 `EMAIL_ALREADY_REGISTERED`, y ni rastro de la contraseña en el JSON.
+- [x] Cero `@Service`/`@Component` en `user.application`.
 
 ## Sesión 5 – Bootstrap del primer ADMIN
 - `BootstrapAdminUseCase` y su servicio.
