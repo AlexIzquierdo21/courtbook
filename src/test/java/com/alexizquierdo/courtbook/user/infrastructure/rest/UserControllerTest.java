@@ -11,6 +11,8 @@ import com.alexizquierdo.courtbook.user.domain.model.User;
 import com.alexizquierdo.courtbook.user.domain.valueobject.Email;
 import com.alexizquierdo.courtbook.user.domain.valueobject.PasswordHash;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
@@ -141,9 +143,10 @@ class UserControllerTest {
         assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("USER_NOT_FOUND");
     }
 
-    @Test
-    void getReturns400WhenTheIdIsNotAUuid() {
-        MvcTestResult result = mvc.get().uri("/api/v1/users/not-a-uuid").exchange();
+    @ParameterizedTest
+    @ValueSource(strings = {"not-a-uuid", "1-2-3-4-5"})
+    void getReturns400WhenTheIdIsNotAUuid(String id) {
+        MvcTestResult result = mvc.get().uri("/api/v1/users/{id}", id).exchange();
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON);
