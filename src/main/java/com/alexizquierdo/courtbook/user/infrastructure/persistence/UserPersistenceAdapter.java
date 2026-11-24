@@ -12,7 +12,7 @@ public class UserPersistenceAdapter implements UserRepository {
 
     private final SpringDataUserRepository repository;
 
-    UserPersistenceAdapter(SpringDataUserRepository repository) {
+    public UserPersistenceAdapter(SpringDataUserRepository repository) {
         this.repository = repository;
     }
 
